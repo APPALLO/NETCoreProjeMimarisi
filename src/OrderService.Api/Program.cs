@@ -41,6 +41,12 @@ builder.Services.AddOpenApi();
 
 var app = builder.Build();
 
+using (var scope = app.Services.CreateScope())
+{
+    var dbContext = scope.ServiceProvider.GetRequiredService<OrderDbContext>();
+    dbContext.Database.Migrate();
+}
+
 app.Use(async (context, next) =>
 {
     if (!context.Request.Headers.ContainsKey("X-Correlation-ID"))

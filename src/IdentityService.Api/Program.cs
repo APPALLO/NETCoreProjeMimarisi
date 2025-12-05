@@ -63,6 +63,12 @@ builder.Services.AddOpenApi();
 
 var app = builder.Build();
 
+using (var scope = app.Services.CreateScope())
+{
+    var dbContext = scope.ServiceProvider.GetRequiredService<IdentityDbContext>();
+    dbContext.Database.Migrate();
+}
+
 // Correlation ID middleware
 app.Use(async (context, next) =>
 {
