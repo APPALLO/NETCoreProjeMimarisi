@@ -1,0 +1,6 @@
+@NETCoreProjeMimarisi_HostAddress = http://localhost:5136
+
+GET {{NETCoreProjeMimarisi_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
