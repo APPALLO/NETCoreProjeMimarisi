@@ -1,6 +1,7 @@
 using CatalogService.Application.Commands;
 using CatalogService.Application.DTOs;
 using CatalogService.Application.Queries;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace CatalogService.Api.Controllers;
@@ -53,6 +54,7 @@ public class ProductsController : ControllerBase
     }
 
     [HttpPost]
+    [Authorize]
     public async Task<ActionResult<ProductDto>> Create([FromBody] CreateProductCommand command, CancellationToken cancellationToken)
     {
         try
@@ -68,6 +70,7 @@ public class ProductsController : ControllerBase
     }
 
     [HttpPut("{id:guid}")]
+    [Authorize]
     public async Task<ActionResult<ProductDto>> Update(Guid id, [FromBody] UpdateProductCommand command, CancellationToken cancellationToken)
     {
         if (id != command.ProductId)
@@ -85,6 +88,7 @@ public class ProductsController : ControllerBase
     }
 
     [HttpPatch("{id:guid}/stock")]
+    [Authorize]
     public async Task<IActionResult> UpdateStock(Guid id, [FromBody] int quantity, CancellationToken cancellationToken)
     {
         try
@@ -99,6 +103,7 @@ public class ProductsController : ControllerBase
     }
 
     [HttpDelete("{id:guid}")]
+    [Authorize]
     public async Task<IActionResult> Delete(Guid id, CancellationToken cancellationToken)
     {
         try

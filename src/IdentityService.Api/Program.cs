@@ -1,7 +1,6 @@
 using System.Text;
 using IdentityService.Application.Services;
 using IdentityService.Infrastructure.Data;
-using IdentityService.Infrastructure.Mocks;
 using IdentityService.Infrastructure.Repositories;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
@@ -13,27 +12,32 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddHttpContextAccessor();
 
 // Database
-// InMemory database for testing without Docker
+// PostgreSQL database - PRODUCTION READY
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+if (string.IsNullOrEmpty(connectionString))
+{
+    throw new InvalidOperationException("Database connection string is not configured. Check appsettings.json");
+}
+
 builder.Services.AddDbContext<IdentityDbContext>(options =>
 {
-    if (connectionString == "InMemory")
+    options.UseNpgsql(connectionString, npgsqlOptions =>
     {
-        options.UseInMemoryDatabase("IdentityDb");
-    }
-    else
-    {
-        options.UseNpgsql(connectionString);
-    }
+        npgsqlOptions.EnableRetryOnFailure(
+            maxRetryCount: 3,
+            maxRetryDelay: TimeSpan.FromSeconds(5),
+            errorCodesToAdd: null);
+        npgsqlOptions.CommandTimeout(30);
+    });
 });
 
 // Services
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 
-// Mock services for standalone mode (no Docker required)
-builder.Services.AddSingleton<IEventPublisher, MockEventPublisher>();
-builder.Services.AddSingleton<ICacheService, MockCacheService>();
+// Infrastructure Services (Production Ready)
+builder.Services.AddSingleton<IEventPublisher, IdentityService.Infrastructure.Messaging.RabbitMqEventPublisher>();
+builder.Services.AddSingleton<ICacheService, IdentityService.Infrastructure.Caching.RedisCacheService>();
 
 // JWT Authentication
 var jwtSecret = builder.Configuration["Jwt:Secret"] ?? throw new InvalidOperationException("JWT secret not configured");

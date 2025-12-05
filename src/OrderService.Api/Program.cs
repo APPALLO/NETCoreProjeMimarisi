@@ -15,6 +15,25 @@ builder.Services.AddScoped<OrderService.Application.Services.ISagaRepository, Or
 builder.Services.AddScoped<IOrderSagaOrchestrator, OrderSagaOrchestrator>();
 builder.Services.AddScoped<IOrderQueryService, OrderQueryService>();
 builder.Services.AddSingleton<OrderService.Application.Services.IEventPublisher, RabbitMqEventPublisher>();
+builder.Services.AddHostedService<OrderSagaConsumer>();
+
+// JWT Authentication
+var jwtSecret = builder.Configuration["Jwt:Secret"] ?? throw new InvalidOperationException("JWT secret not configured");
+builder.Services.AddAuthentication("Bearer")
+    .AddJwtBearer("Bearer", options =>
+    {
+        options.TokenValidationParameters = new Microsoft.IdentityModel.Tokens.TokenValidationParameters
+        {
+            ValidateIssuerSigningKey = true,
+            IssuerSigningKey = new Microsoft.IdentityModel.Tokens.SymmetricSecurityKey(System.Text.Encoding.UTF8.GetBytes(jwtSecret)),
+            ValidateIssuer = true,
+            ValidIssuer = builder.Configuration["Jwt:Issuer"],
+            ValidateAudience = true,
+            ValidAudience = builder.Configuration["Jwt:Audience"],
+            ValidateLifetime = true,
+            ClockSkew = TimeSpan.Zero
+        };
+    });
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
