@@ -16,8 +16,8 @@ public class OrderSagaConsumer : BackgroundService
     private readonly IServiceProvider _serviceProvider;
     private readonly ILogger<OrderSagaConsumer> _logger;
     private readonly IConfiguration _configuration;
-    private IConnection _connection;
-    private IModel _channel;
+    private IConnection? _connection;
+    private IModel? _channel;
 
     private const string InventoryValidatedQueue = "order.inventory-validated";
     private const string InventoryReservedQueue = "order.inventory-reserved";
@@ -73,8 +73,14 @@ public class OrderSagaConsumer : BackgroundService
         _channel.QueueBind(ProcessPaymentQueue, "domain.order.ProcessPayment", "");
     }
 
-    protected override Task ExecuteAsync(CancellationToken stoppingToken)
+    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
+        if (_channel == null)
+        {
+            _logger.LogError("RabbitMQ channel is null, stopping consumer");
+            return;
+        }
+
         stoppingToken.ThrowIfCancellationRequested();
 
         var consumer = new AsyncEventingBasicConsumer(_channel);
@@ -117,7 +123,8 @@ public class OrderSagaConsumer : BackgroundService
         _channel.BasicConsume(queue: PaymentProcessedQueue, autoAck: false, consumer: consumer);
         _channel.BasicConsume(queue: ProcessPaymentQueue, autoAck: false, consumer: consumer);
 
-        return Task.CompletedTask;
+        // Keep the task running
+        await Task.Delay(Timeout.Infinite, stoppingToken);
     }
 
     private async Task HandleInventoryValidated(string message)
