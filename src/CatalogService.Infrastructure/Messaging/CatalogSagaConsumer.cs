@@ -44,7 +44,9 @@ public class CatalogSagaConsumer : BackgroundService
             Port = int.Parse(_configuration["RabbitMQ:Port"] ?? "5672"),
             UserName = _configuration["RabbitMQ:Username"] ?? "guest",
             Password = _configuration["RabbitMQ:Password"] ?? "guest",
-            DispatchConsumersAsync = true
+            DispatchConsumersAsync = true,
+            AutomaticRecoveryEnabled = true,
+            NetworkRecoveryInterval = TimeSpan.FromSeconds(5)
         };
 
         _connection = factory.CreateConnection();
