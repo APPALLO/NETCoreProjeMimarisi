@@ -18,8 +18,8 @@ public class CatalogSagaConsumer : BackgroundService
     private readonly IServiceProvider _serviceProvider;
     private readonly ILogger<CatalogSagaConsumer> _logger;
     private readonly IConfiguration _configuration;
-    private IConnection _connection;
-    private IModel _channel;
+    private IConnection? _connection;
+    private IModel? _channel;
     private const string ValidateInventoryQueue = "catalog.validate-inventory";
     private const string ReserveInventoryQueue = "catalog.reserve-inventory";
     private const string ReleaseInventoryQueue = "catalog.release-inventory";
@@ -66,8 +66,14 @@ public class CatalogSagaConsumer : BackgroundService
         _channel.QueueBind(ReleaseInventoryQueue, "domain.order.ReleaseInventory", "");
     }
 
-    protected override Task ExecuteAsync(CancellationToken stoppingToken)
+    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
+        if (_channel == null)
+        {
+            _logger.LogError("RabbitMQ channel is null, stopping consumer");
+            return;
+        }
+
         stoppingToken.ThrowIfCancellationRequested();
 
         var consumer = new AsyncEventingBasicConsumer(_channel);
@@ -112,7 +118,7 @@ public class CatalogSagaConsumer : BackgroundService
         _channel.BasicConsume(queue: ReserveInventoryQueue, autoAck: false, consumer: consumer);
         _channel.BasicConsume(queue: ReleaseInventoryQueue, autoAck: false, consumer: consumer);
 
-        return Task.CompletedTask;
+        await Task.Delay(Timeout.Infinite, stoppingToken);
     }
 
     private async Task HandleValidateInventory(string message)

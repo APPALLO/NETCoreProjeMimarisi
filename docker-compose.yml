@@ -57,8 +57,8 @@ services:
 
   identity-service:
     build:
-      context: ./src/IdentityService.Api
-      dockerfile: Dockerfile
+      context: ./src
+      dockerfile: IdentityService.Api/Dockerfile
     container_name: identity-service
     environment:
       - ConnectionStrings__DefaultConnection=Host=postgres;Port=5432;Database=identitydb;Username=postgres;Password=postgres
@@ -77,8 +77,8 @@ services:
 
   catalog-service:
     build:
-      context: ./src/CatalogService.Api
-      dockerfile: Dockerfile
+      context: ./src
+      dockerfile: CatalogService.Api/Dockerfile
     container_name: catalog-service
     environment:
       - ConnectionStrings__DefaultConnection=Host=postgres;Port=5432;Database=catalogdb;Username=postgres;Password=postgres
@@ -97,8 +97,8 @@ services:
 
   order-service:
     build:
-      context: ./src/OrderService.Api
-      dockerfile: Dockerfile
+      context: ./src
+      dockerfile: OrderService.Api/Dockerfile
     container_name: order-service
     environment:
       - ConnectionStrings__DefaultConnection=Host=postgres;Port=5432;Database=orderdb;Username=postgres;Password=postgres
@@ -114,8 +114,8 @@ services:
 
   api-gateway:
     build:
-      context: ./src/ApiGateway
-      dockerfile: Dockerfile
+      context: ./src
+      dockerfile: ApiGateway/Dockerfile
     container_name: api-gateway
     ports:
       - "8080:8080"
